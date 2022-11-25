@@ -50,6 +50,8 @@ async def create_item(item: Item):
     with open("scanSamples.txt", "w") as f:
         print(str1, file=f)
 
+    print(os.getenv("FIREBASE_HOST_ENV"))
+
     featureVectorConverter()
     classifierGenerator()
 
