@@ -8,16 +8,19 @@ from pydantic import BaseModel
 
 import uvicorn
 
+import json
+
+from src.featureVectorConverter import *
+from src.classifierGenerator import *
+
 origins = [
     "http://indoor.jonascsantos.com",
     "https://indoor.jonascsantos.com",
+    "http://localhost:8080"
 ]
 
 class Item(BaseModel):
-    name: str
-    description: Union[str, None] = None
-    price: float
-    tax: Union[float, None] = None
+    scanSamples: str
 
 app = FastAPI()
 
@@ -34,12 +37,22 @@ def read_root():
     return {"server_info": "Indoor Positioning Azure API"}
 
 
-@app.post("/items/")
+@app.post("/ai-generate/")
 async def create_item(item: Item):
     item_dict = item.dict()
-    if item.tax:
-        price_with_tax = item.price + item.tax
-        item_dict.update({"price_with_tax": price_with_tax})
+    scanSamples = json.loads(item.scanSamples)
+
+    str1 = " "
+    str1 = str1.join(scanSamples)
+
+    item_dict.update({"scanSamples": str1})
+
+    with open("src/scanSamples.txt", "w") as f:
+        print(str1, file=f)
+
+    featureVectorConverter()
+    classifierGenerator()
+
     return item_dict
 
 if __name__ == '__main__':
