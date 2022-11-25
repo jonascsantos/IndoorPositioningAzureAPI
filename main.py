@@ -10,8 +10,8 @@ import uvicorn
 
 import json
 
-from src.featureVectorConverter import *
-from src.classifierGenerator import *
+from featureVectorConverter import *
+from classifierGenerator import *
 
 origins = [
     "http://indoor.jonascsantos.com",
@@ -47,7 +47,7 @@ async def create_item(item: Item):
 
     item_dict.update({"scanSamples": str1})
 
-    with open("src/scanSamples.txt", "w") as f:
+    with open("scanSamples.txt", "w") as f:
         print(str1, file=f)
 
     featureVectorConverter()

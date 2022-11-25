@@ -2,7 +2,7 @@ from sklearn.tree import DecisionTreeClassifier
 from micromlgen import port_wifi_indoor_positioning, port
 
 def classifierGenerator():
-    with open('src/scanSamples.txt', 'r') as file:
+    with open('scanSamples.txt', 'r') as file:
         data = file.read()
     
     samples = f'''
@@ -13,7 +13,7 @@ def classifierGenerator():
     clf = DecisionTreeClassifier()
     clf.fit(X, y)
 
-    with open("src/Classifier.h", "w") as f:
+    with open("Classifier.h", "w") as f:
         print(port(clf, classmap=classmap), file=f)
 
     print("Classifier Generated")
