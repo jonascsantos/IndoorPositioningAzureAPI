@@ -21,11 +21,13 @@ RUN ./bin/arduino-cli core update-index
 RUN ./bin/arduino-cli core install esp32:esp32
 RUN ./bin/arduino-cli lib install --git-url https://github.com/tzapu/WiFiManager.git https://github.com/mobizt/Firebase-ESP32.git
 
+RUN touch serviceAccountKey.json
+RUN echo "${SERVICE_ACCOUNT_KEY}" > serviceAccountKey.json
+
 COPY ./main.py ./app/main.py
 COPY ./classifierGenerator.py ./app/classifierGenerator.py
 COPY ./featureVectorConverter.py ./app/featureVectorConverter.py
 
-COPY ./serviceAccountKey.json ./app/serviceAccountKey.json
 
 EXPOSE 80
 
