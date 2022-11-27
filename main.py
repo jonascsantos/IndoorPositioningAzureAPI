@@ -38,7 +38,7 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-cred = credentials.Certificate(os.path.abspath(os.path.dirname(__file__)) + '/serviceAccountKey.json')
+cred = credentials.Certificate('/fastapi-app/serviceAccountKey.json')
 
 firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://flowsensor-bfbed.firebaseio.com'
