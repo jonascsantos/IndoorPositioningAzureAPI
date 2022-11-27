@@ -5,13 +5,12 @@ from pydantic import BaseModel
 from firebase_admin import credentials, db, storage
 from PythonSed import Sed, SedException
 
+import base64
 import uvicorn
 import json
 import os
 import firebase_admin
 import requests
-import fileinput
-import re
 
 from featureVectorConverter import *
 from classifierGenerator import *
@@ -38,11 +37,21 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-cred = credentials.Certificate('/fastapi-app/serviceAccountKey.json')
+if os.getenv("SERVICE_ACCOUNT_KEY"):
+    serviceAccountKey = os.getenv("SERVICE_ACCOUNT_KEY")
 
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://flowsensor-bfbed.firebaseio.com'
-})
+    decodeBase64 = base64.b64decode(serviceAccountKey)
+    serviceAccountKey = decodeBase64.decode("ascii") 
+
+    with open("serviceAccountKey.json", "w") as f:
+        print(serviceAccountKey, file=f)
+    
+    cred = credentials.Certificate('serviceAccountKey.json')
+
+    if os.getenv("FIREBASE_HOST_KEY") :
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': os.getenv("FIREBASE_HOST_KEY")
+        })
 
 @app.get("/")
 def read_root():
