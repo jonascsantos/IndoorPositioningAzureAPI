@@ -8,7 +8,7 @@ arduino core install
     esp32:esp32
     esp8266:esp8266 
 
-./bin/arduino-cli compile -b esp32:esp32:esp32 /home/jonascsantos/ScanAndFirmwareUpload/ScanAndFirmwareUpload.ino
+arduino-cli compile --output-dir /fastapi-app -b esp32:esp32:esp32 FILENAME.ino
 ```
 
 ## Docker commands | Azure registry and hosting
