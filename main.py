@@ -109,6 +109,10 @@ def create_item(item: Item):
     fileName = "fastapi-app.ino.bin"
     bucket = storage.bucket()
     blob = bucket.blob(fileName)
+    blob.chunk_size = 5 * 1024 * 1024
+
+    print("Blob created. Uploading file:")
+    
     blob.upload_from_filename(fileName)
     
     ini_time_for_now = datetime.now()
@@ -136,6 +140,8 @@ def create_item(item: Item):
     }
 
     ref.update(metadata)
+
+    print("DB Firmware Metadata was Updated")
 
     return metadata
 
