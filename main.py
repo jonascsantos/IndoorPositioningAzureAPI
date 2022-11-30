@@ -14,6 +14,8 @@ import os
 import firebase_admin
 import requests
 import subprocess
+import shlex
+import time
 
 from featureVectorConverter import *
 from classifierGenerator import *
@@ -77,7 +79,6 @@ def create_item(item: Item):
         ref = db.reference("/")
         inoFileUrl = ref.child('StandardArduinoFile').get()
 
-
     r = requests.get(inoFileUrl, allow_redirects=True)
     open('firmware.ino', 'wb').write(r.content)
 
@@ -103,9 +104,20 @@ def create_item(item: Item):
     featureVectorConverter()
     classifierGenerator()
 
+    time.sleep(3)
+
+    return 'fastapi-app.ino'
+
+@app.post("/arduino-compile/")
+def compile():
     print("compiling...")
+
     subprocess.run("/fastapi-app/bin/arduino-cli compile --output-dir /fastapi-app -b esp32:esp32:esp32 fastapi-app.ino", shell=True)
 
+    return 'compiled'
+
+@app.post("/binaries-upload/")
+def binaries_upload():
     fileName = "fastapi-app.ino.bin"
     bucket = storage.bucket()
     blob = bucket.blob(fileName)
@@ -114,13 +126,19 @@ def create_item(item: Item):
     print("Blob created. Uploading file:")
     
     blob.upload_from_filename(fileName)
-    
+
     ini_time_for_now = datetime.now()
     expiration_time = ini_time_for_now + relativedelta(years=2)
 
     url = blob.generate_signed_url(expiration=expiration_time)
 
     print("fileUrl: " + url)
+
+    return url
+
+@app.post("/update-metadata/")
+def update_metadata(item: Item):
+    url = item.url
 
     ref = db.reference("/" + sensorId + "/FIRMWARE/WifiScan" )
 
