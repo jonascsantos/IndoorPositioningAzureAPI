@@ -26,9 +26,14 @@ origins = [
     "http://localhost:8080"
 ]
 
-class Item(BaseModel):
+class Samples(BaseModel):
     scanSamples: str
     sensorId: str
+
+class FileData(BaseModel):
+    url: str
+    sensorId: str
+    fileName: str
 
 if os.getenv("SERVICE_ACCOUNT_KEY"):
     serviceAccountKey = os.getenv("SERVICE_ACCOUNT_KEY")
@@ -62,7 +67,7 @@ def read_root():
     return {"server_info": "Indoor Positioning Azure API"}
 
 @app.post("/ai-generate/")
-def create_item(item: Item):
+def create_item(item: Samples):
     item_dict = item.dict()
     scanSamples = json.loads(item.scanSamples)
     sensorId = item.sensorId
@@ -134,11 +139,13 @@ def binaries_upload():
 
     print("fileUrl: " + url)
 
-    return url
+    return { "url" : url, "fileName" : fileName }
 
 @app.post("/update-metadata/")
-def update_metadata(item: Item):
-    url = item.url
+def update_metadata(fileData: FileData):
+    postURl = fileData.url
+    sensorId = fileData.sensorId
+    fileName = fileData.fileName
 
     ref = db.reference("/" + sensorId + "/FIRMWARE/WifiScan" )
 
@@ -153,7 +160,7 @@ def update_metadata(item: Item):
 
     metadata = {
         "filename": dbFirmwareFilename,
-        "url": url,
+        "url": postURl,
         "version": dbFirmwareVersion
     }
 
