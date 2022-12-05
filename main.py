@@ -29,11 +29,16 @@ origins = [
 class Samples(BaseModel):
     scanSamples: str
     sensorId: str
+    board: str
 
 class FileData(BaseModel):
     url: str
     sensorId: str
     fileName: str
+
+class Board(BaseModel):
+    boardName: str
+    sensorId: str
 
 if os.getenv("SERVICE_ACCOUNT_KEY"):
     serviceAccountKey = os.getenv("SERVICE_ACCOUNT_KEY")
@@ -71,6 +76,7 @@ def create_item(item: Samples):
     item_dict = item.dict()
     scanSamples = json.loads(item.scanSamples)
     sensorId = item.sensorId
+    board = item.board
     
     str1 = " "
     str1 = str1.join(scanSamples)
@@ -111,31 +117,50 @@ def create_item(item: Samples):
 
     time.sleep(3)
 
-    return 'fastapi-app.ino'
+    return {
+        "board": board,
+        "sensorId": sensorId
+    }
 
 @app.post("/arduino-compile/")
-def compile():
-    print("compiling...")
+def compile(board: Board):
+    boardName = board.boardName
+    sensorId = board.sensorId
+    print("compiling..." + boardName)
 
-    subprocess.run("/fastapi-app/bin/arduino-cli compile --output-dir /fastapi-app -b esp32:esp32:esp32 fastapi-app.ino", shell=True)
+    if (boardName == 'ESP32'):
+        subprocess.run("/fastapi-app/bin/arduino-cli compile --output-dir /fastapi-app -b esp32:esp32:esp32 fastapi-app.ino", shell=True)
+    elif (boardName == 'ESP8266'):
+        subprocess.run("/fastapi-app/bin/arduino-cli compile --output-dir /fastapi-app -b esp8266:esp8266:nodemcu fastapi-app.ino", shell=True)
+    else:
+        print("INVALID BOARD")
+        return false
 
-    return 'compiled'
+    return sensorId
 
 @app.post("/binaries-upload/")
 def binaries_upload():
     fileName = "fastapi-app.ino.bin"
     bucket = storage.bucket()
     blob = bucket.blob(fileName)
+    
+    blob.delete()
+
     blob.chunk_size = 5 * 1024 * 1024
 
     print("Blob created. Uploading file:")
     
     blob.upload_from_filename(fileName)
 
-    ini_time_for_now = datetime.now()
-    expiration_time = ini_time_for_now + relativedelta(years=2)
+    blob.make_public()
+    
+    urlTemp = 'https://firebasestorage.googleapis.com/v0/b/' + os.getenv("FIREBASE_STORAGE_BUCKET_ENV") + '/o/' + fileName
 
-    url = blob.generate_signed_url(expiration=expiration_time)
+    response = requests.get(urlTemp)
+
+    access_tk = response.json()["downloadTokens"]
+
+    url = 'https://firebasestorage.googleapis.com/v0/b/' + os.getenv("FIREBASE_STORAGE_BUCKET_ENV") + '/o/' + fileName + "?alt=media&token=" + access_tk
 
     print("fileUrl: " + url)
 
@@ -166,7 +191,7 @@ def update_metadata(fileData: FileData):
 
     ref.update(metadata)
 
-    print("DB Firmware Metadata was Updated")
+    print("DB Firmware Metadata was Updated: " + sensorId)
 
     return metadata
 

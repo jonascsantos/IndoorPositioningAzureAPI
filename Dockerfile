@@ -13,12 +13,13 @@ RUN wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
     chmod +x /usr/bin/yq
 RUN bin/arduino-cli config init
 
-RUN yq -i '.board_manager.additional_urls = ["https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json"]' ~/.arduino15/arduino-cli.yaml 
+RUN yq -i '.board_manager.additional_urls = ["https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json", "https://arduino.esp8266.com/stable/package_esp8266com_index.json"]' ~/.arduino15/arduino-cli.yaml 
 RUN yq -i '.library.enable_unsafe_install = true' ~/.arduino15/arduino-cli.yaml 
 
 RUN ./bin/arduino-cli core update-index
 RUN ./bin/arduino-cli core install esp32:esp32
-RUN ./bin/arduino-cli lib install --git-url https://github.com/tzapu/WiFiManager.git https://github.com/mobizt/Firebase-ESP32.git
+RUN ./bin/arduino-cli core install esp8266:esp8266
+RUN ./bin/arduino-cli lib install --git-url https://github.com/mobizt/Firebase-ESP8266.git https://github.com/tzapu/WiFiManager.git https://github.com/mobizt/Firebase-ESP32.git 
 
 COPY ./main.py ./app/main.py
 COPY ./classifierGenerator.py ./app/classifierGenerator.py
